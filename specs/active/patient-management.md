@@ -69,4 +69,4 @@ Patient management is the foundation for appointments, visits, prescriptions, bi
 
 ## Status
 
-Draft
+Completed (Backend & Frontend)

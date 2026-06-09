@@ -62,4 +62,4 @@ This feature enables the clinic to manage clinicians as operational resources, w
 
 ## Status
 
-Draft
+Completed

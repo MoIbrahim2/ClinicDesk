@@ -1,0 +1,7 @@
+node_modules
+dist
+.git
+clinic-desk-backend/node_modules
+clinic-desk-backend/dist
+clinic-desk-frontend/node_modules
+clinic-desk-frontend/dist

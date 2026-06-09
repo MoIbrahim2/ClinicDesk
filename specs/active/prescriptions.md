@@ -67,4 +67,4 @@ Digital prescriptions improve readability, reduce friction for repeat care, and 
 
 ## Status
 
-Draft
+In Progress (Backend Completed, Frontend Pending)
