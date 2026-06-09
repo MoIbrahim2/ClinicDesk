@@ -1,0 +1,17 @@
+[mcp_servers.filesystem]
+command = "cmd"
+args = ["/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "D:\\01_iti_task\\team_poject\\hackathon_project"]
+
+[mcp_servers.github]
+command = "cmd"
+args = ["/c", "npx", "-y", "@modelcontextprotocol/server-github"]
+
+[mcp_servers.github.env]
+GITHUB_PERSONAL_ACCESS_TOKEN = "YOUR_GITHUB_TOKEN"
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+
+[mcp_servers.stitch]
+url = "YOUR_STITCH_MCP_URL"
+
