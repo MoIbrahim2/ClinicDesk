@@ -2478,7 +2478,7 @@ flowchart TB
 | **Routing** | React Router v6 | Nested routes with layout wrappers and protected route components |
 | **State Management** | React Query + Context | React Query for server state caching; Context API for auth/theme/language |
 | **HTTP Client** | Axios | Centralized instance with interceptors for JWT injection and 401 refresh logic |
-| **UI Library** | Ant Design 5 | RTL-ready; built-in Arabic locale; rich data table and form components |
+| **UI Generation** | Stitch UI Generation | Automated, custom React components with Vanilla CSS; RTL-ready; supports dynamic bilingual forms and tables |
 | **Internationalization** | i18next + react-i18next | Namespaced JSON translation files for `en` and `ar`; RTL layout toggle |
 | **Charts** | Recharts | Dashboard analytics: appointment trends, revenue charts, patient demographics |
 | **Forms** | React Hook Form + Zod | Declarative validation with bilingual error messages |
@@ -2592,7 +2592,7 @@ backend/src/
 |---|---|---|---|
 | **Frontend** | React | 18.x | UI framework |
 | | TypeScript | 5.x | Type safety |
-| | Ant Design | 5.x | Component library (RTL support) |
+| | Stitch | Latest | UI Generation library (RTL support, Vanilla CSS) |
 | | React Router | 6.x | Client-side routing |
 | | React Query | 5.x | Server state management |
 | | Axios | 1.x | HTTP client |
@@ -4058,7 +4058,7 @@ GET /notifications?isRead=false&page=1&limit=10
 |-----------|-------------------|---------------------|
 | **Dev 1 (BE Lead)** | Git repo + monorepo setup, Docker Compose (MySQL + API), NestJS scaffolding, database config | TypeORM entities + migrations for all 17 tables, seed data (roles, admin user) |
 | **Dev 2 (BE)** | Auth module: register, login, JWT strategy, RBAC guards | Auth module: change-password, refresh-token, profile endpoints |
-| **Dev 3 (FE Lead)** | Vite + React scaffolding, Ant Design setup, i18next config, routing skeleton | Auth pages (Login, Register), ProtectedRoute, AppLayout with sidebar |
+| **Dev 3 (FE Lead)** | Vite + React scaffolding, Stitch UI Generation setup, i18next config, routing skeleton | Auth pages (Login, Register), ProtectedRoute, AppLayout with sidebar |
 | **Dev 4 (FE)** | Design system: CSS variables, theme config, RTL stylesheet | Common components: DataTable, PageHeader, StatusBadge, ConfirmModal, LoadingSpinner |
 | **Dev 5 (FS)** | Help Dev 1 with Docker + DB setup, API response standardization | Swagger setup, error handling filter, validation pipe, common DTOs |
 
@@ -4136,7 +4136,7 @@ GET /notifications?isRead=false&page=1&limit=10
 | T08 | RBAC guards + roles decorator | Dev 2 | 1 | 5 | T07 | [ ] |
 | T09 | Auth: refresh-token + change-password | Dev 2 | 1 | 3 | T07 | [ ] |
 | T10 | Vite + React project scaffolding | Dev 3 | 1 | 2 | -- | [ ] |
-| T11 | Ant Design + i18next + routing setup | Dev 3 | 1 | 3 | T10 | [ ] |
+| T11 | Stitch UI Generation + i18next + routing setup | Dev 3 | 1 | 3 | T10 | [ ] |
 | T12 | Login + Register pages | Dev 3 | 1 | 5 | T11 | [ ] |
 | T13 | AppLayout (sidebar, header, footer) | Dev 3 | 1 | 5 | T11 | [ ] |
 | T14 | Design system: CSS vars + theme | Dev 4 | 1 | 3 | T10 | [ ] |
@@ -4204,7 +4204,7 @@ Key Dependencies:
 |---------|--------|------------|
 | DB migration fails | Blocks ALL backend | Dev 1 prioritizes + Dev 5 assists |
 | Auth not working | Blocks ALL protected routes | Dev 2 focuses exclusively on Day 1 |
-| Frontend scaffold issues | Blocks ALL UI work | Dev 3 pre-tests Vite + Ant Design setup |
+| Frontend scaffold issues | Blocks ALL UI work | Dev 3 pre-tests Vite + Stitch UI Generation setup |
 | API contract mismatch | Blocks FE-BE integration | Agree on Swagger specs Day 1 afternoon |
 
 ---
@@ -4312,7 +4312,7 @@ The following technology choices are optimized for a **5-day hackathon** environ
 | **React 18** | Frontend framework | Largest ecosystem of any UI library; component reuse accelerates parallel development; hooks simplify state management without boilerplate; concurrent rendering features improve perceived performance; team familiarity ensures zero ramp-up time |
 | **Vite** | Build tool | Instant Hot Module Replacement (HMR) during development — sub-50ms updates vs. CRA's multi-second rebuilds; native ES module support eliminates bundling during dev; production builds via Rollup are optimized out of the box; minimal configuration required |
 | **React Router v6** | Routing | Industry-standard declarative routing for React; nested route support maps naturally to the clinic layout hierarchy; built-in loader/action patterns simplify data fetching; `<Outlet>` enables clean layout composition |
-| **Ant Design (antd)** | UI Component Library | 60+ production-ready components — tables with sorting/filtering/pagination, forms with validation, date pickers, calendars, modals, notifications, and layout primitives; first-class **RTL support** for Arabic interface; built-in theming via CSS variables; saves an estimated **3-4 days** of custom UI development |
+| **Stitch UI Generation** | UI Generation Library | Automated UI generation using Stitch to create custom, responsive React components with Vanilla CSS; saves significant development time by generating layouts and screen flows directly from design prompts; provides first-class RTL/LTR layout support |
 | **i18next + react-i18next** | Internationalization | Seamless Arabic/English switching with namespace-based translation files; automatic RTL/LTR direction handling; pluralization rules; interpolation support; lazy-loading of locale bundles; the de facto standard for React i18n |
 | **Axios** | HTTP client | Request/response interceptors enable automatic JWT token injection and refresh logic; consistent error handling via interceptor chains; built-in request cancellation; cleaner API than native `fetch` for complex use cases |
 | **Recharts** | Charts | Built specifically for React — composable chart components using JSX; responsive containers; simple API for bar, line, pie, and area charts; sufficient for dashboard analytics without the overhead of D3.js |
@@ -4339,7 +4339,7 @@ graph TB
 
     subgraph "Presentation Layer"
         React["React 18 + Vite"]
-        AntD["Ant Design UI"]
+        Stitch["Stitch UI Generation"]
         i18n["i18next"]
         RQ["React Query"]
         Router["React Router v6"]
@@ -4373,7 +4373,7 @@ graph TB
     Browser --> Nginx
     Nginx -->|"Static Files"| React
     Nginx -->|"/api/*"| NestJS
-    React --> AntD
+    React --> Stitch
     React --> i18n
     React --> RQ
     React --> Router
@@ -4438,7 +4438,7 @@ clinic-desk-frontend/
 │   │   │   ├── ProtectedRoute.jsx    # Auth check wrapper for routes
 │   │   │   ├── RoleGuard.jsx         # Role-based access control wrapper
 │   │   │   ├── LanguageToggle.jsx    # AR/EN language switcher button
-│   │   │   ├── DataTable.jsx         # Reusable Ant Design table with pagination
+│   │   │   ├── DataTable.jsx         # Reusable table with pagination (generated by Stitch)
 │   │   │   ├── StatusBadge.jsx       # Color-coded status indicators
 │   │   │   ├── ConfirmModal.jsx      # Reusable confirmation dialog
 │   │   │   └── PageHeader.jsx        # Consistent page title + breadcrumb + actions
@@ -4808,21 +4808,21 @@ src/
 
 | Time | Dev A (Backend) | Dev B (Backend) | Dev C (Frontend) | Dev D (Frontend) |
 |---|---|---|---|---|
-| **H1** | `nest new clinic-desk-backend` — configure TypeORM, MySQL connection, Swagger setup, global pipes/filters/interceptors | Define all enums (`role`, `appointment-status`, `invoice-status`, `payment-method`, `gender`) in `common/enums/` | `npm create vite@latest clinic-desk-frontend -- --template react` — install Ant Design, React Router, Axios, i18next, React Query | Set up i18n: configure `i18next`, create `en/translation.json` and `ar/translation.json` with initial keys (nav items, common labels) |
-| **H2** | Create `User` entity with all fields; create auth module skeleton (controller, service, JWT strategy) | Create common DTOs (`pagination.dto.ts`, `api-response.dto.ts`), guards (`jwt-auth.guard.ts`, `roles.guard.ts`), decorators (`@Roles`, `@CurrentUser`) | Set up project structure: create all directories (`api/`, `components/`, `pages/`, etc.); configure `axiosInstance.js` with base URL and interceptor stubs | Set up RTL support: configure Ant Design `ConfigProvider` with direction, create `rtl.css`, implement `LanguageToggle` component |
+| **H1** | `nest new clinic-desk-backend` — configure TypeORM, MySQL connection, Swagger setup, global pipes/filters/interceptors | Define all enums (`role`, `appointment-status`, `invoice-status`, `payment-method`, `gender`) in `common/enums/` | `npm create vite@latest clinic-desk-frontend -- --template react` — install React Router, Axios, i18next, React Query, and initialize Stitch UI Generation | Set up i18n: configure `i18next`, create `en/translation.json` and `ar/translation.json` with initial keys (nav items, common labels) |
+| **H2** | Create `User` entity with all fields; create auth module skeleton (controller, service, JWT strategy) | Create common DTOs (`pagination.dto.ts`, `api-response.dto.ts`), guards (`jwt-auth.guard.ts`, `roles.guard.ts`), decorators (`@Roles`, `@CurrentUser`) | Set up project structure: create all directories (`api/`, `components/`, `pages/`, etc.); configure `axiosInstance.js` with base URL and interceptor stubs | Set up RTL support: configure i18n and Stitch layout classes for direction, create `rtl.css`, implement `LanguageToggle` component |
 
 ##### Hours 3-4: Auth System
 
 | Time | Dev A (Backend) | Dev B (Backend) | Dev C (Frontend) | Dev D (Frontend) |
 |---|---|---|---|---|
-| **H3** | Implement `AuthService`: `register()` with bcrypt hashing, `login()` with JWT generation, `validateUser()` | Implement `JwtStrategy`, configure Passport module, test token generation with Swagger | Build `LoginForm.jsx` and `LoginPage.jsx` using Ant Design `Form`, `Input`, `Button` | Build `AppLayout.jsx` with Ant Design `Layout`, `Sider`, `Content`; implement `Sidebar.jsx` with role-based menu items |
+| **H3** | Implement `AuthService`: `register()` with bcrypt hashing, `login()` with JWT generation, `validateUser()` | Implement `JwtStrategy`, configure Passport module, test token generation with Swagger | Build `LoginForm.jsx` and `LoginPage.jsx` using React Hook Form, Zod, and Stitch-generated components | Build AppLayout.jsx with Stitch-generated layout and sidebar container; implement Sidebar.jsx with role-based menu items |
 | **H4** | Implement `AuthController`: `POST /auth/login`, `POST /auth/register`; add Swagger decorators; test with Postman/Swagger UI | Create `UsersModule` with basic CRUD: `UsersController`, `UsersService`, `User` entity repository | Build `AuthContext.jsx`: store user + token in state and localStorage; implement `useAuth()` hook; build `ProtectedRoute.jsx` | Build `Header.jsx` with user avatar, language toggle, notification bell; build `PageHeader.jsx` reusable component |
 
 ##### Hours 5-6: Patient Module (First Domain Module)
 
 | Time | Dev A (Backend) | Dev B (Backend) | Dev C (Frontend) | Dev D (Frontend) |
 |---|---|---|---|---|
-| **H5** | Create `Patient` entity with all fields (demographics, contact, medical history); create `PatientsModule` with CRUD endpoints | Create `Doctor` entity linking to `User`; create `DoctorsModule` skeleton | Build `patientApi.js` with all CRUD functions; build `PatientListPage.jsx` with `DataTable` component showing patient list | Build reusable `DataTable.jsx` wrapping Ant Design `Table` with search, pagination, and loading states; build `StatusBadge.jsx` |
+| **H5** | Create `Patient` entity with all fields (demographics, contact, medical history); create `PatientsModule` with CRUD endpoints | Create `Doctor` entity linking to `User`; create `DoctorsModule` skeleton | Build `patientApi.js` with all CRUD functions; build `PatientListPage.jsx` with `DataTable` component showing patient list | Build reusable `DataTable.jsx` (generated by Stitch) with search, pagination, and loading states; build `StatusBadge.jsx` |
 | **H6** | Implement patient search/filter endpoint (`GET /patients?search=&gender=&dateFrom=&dateTo=`); add pagination | Implement `DoctorsController` CRUD; add doctor availability/schedule fields | Build `PatientForm.jsx` (create/edit modal) with validation; connect to API | Build `PatientCard.jsx` summary component; build `ConfirmModal.jsx` for delete confirmations |
 
 ##### Hours 7-8: Appointments Module
@@ -4830,7 +4830,7 @@ src/
 | Time | Dev A (Backend) | Dev B (Backend) | Dev C (Frontend) | Dev D (Frontend) |
 |---|---|---|---|---|
 | **H7** | Create `Appointment` entity with relations (patient, doctor); implement `AppointmentsModule` with CRUD + status transitions | Implement appointment conflict detection (no double-booking same doctor at same time); add filter endpoints | Build `appointmentApi.js`; build `AppointmentListPage.jsx` with date/status filters | Build `AppointmentForm.jsx` (schedule modal) with doctor/patient select, date/time picker, duration |
-| **H8** | Add appointment calendar query endpoint (`GET /appointments/calendar?start=&end=&doctorId=`); test all Day 1 endpoints | Write database seed script: create admin user, sample doctors, 20 sample patients, 50 sample appointments | Build `AppointmentCalendarPage.jsx` using Ant Design Calendar or custom calendar view | Integration testing: verify login → dashboard → patients list → create patient → appointments flow end-to-end |
+| **H8** | Add appointment calendar query endpoint (`GET /appointments/calendar?start=&end=&doctorId=`); test all Day 1 endpoints | Write database seed script: create admin user, sample doctors, 20 sample patients, 50 sample appointments | Build `AppointmentCalendarPage.jsx` using Stitch-generated calendar view or custom calendar view | Integration testing: verify login → dashboard → patients list → create patient → appointments flow end-to-end |
 
 #### Day 1 Checkpoint ✅
 
@@ -4917,7 +4917,7 @@ By end of Day 4, verify:
 | **API Hardening** | Dev A | Fix all known backend bugs; add missing validation rules; ensure proper error messages; verify all Swagger docs are accurate; test edge cases (empty states, large datasets) |
 | **E2E Testing** | Dev B | Write and run key e2e test scenarios; test role-based access (admin vs doctor vs receptionist); verify all API endpoints return correct status codes; load test with seed data |
 | **UI Polish** | Dev C | Fix responsive layout issues; ensure all forms validate properly on submit; add loading states to all API calls; fix RTL layout issues; ensure print views (prescription, invoice) work correctly |
-| **UX Enhancement** | Dev D | Add empty state illustrations; improve error messages (user-friendly Arabic/English); add success notifications (Ant Design `message.success`); ensure consistent spacing and alignment |
+| **UX Enhancement** | Dev D | Add empty state illustrations; improve error messages (user-friendly Arabic/English); add success notifications (Stitch-generated or custom notifications); ensure consistent spacing and alignment |
 
 #### Day 5 Afternoon (Hours 5-8): Demo Preparation
 

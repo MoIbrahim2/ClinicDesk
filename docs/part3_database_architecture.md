@@ -933,7 +933,7 @@ flowchart TB
 | **Routing** | React Router v6 | Nested routes with layout wrappers and protected route components |
 | **State Management** | React Query + Context | React Query for server state caching; Context API for auth/theme/language |
 | **HTTP Client** | Axios | Centralized instance with interceptors for JWT injection and 401 refresh logic |
-| **UI Library** | Ant Design 5 | RTL-ready; built-in Arabic locale; rich data table and form components |
+| **UI Generation** | Stitch UI Generation | Automated, custom React components with Vanilla CSS; RTL-ready; supports dynamic bilingual forms and tables |
 | **Internationalization** | i18next + react-i18next | Namespaced JSON translation files for `en` and `ar`; RTL layout toggle |
 | **Charts** | Recharts | Dashboard analytics: appointment trends, revenue charts, patient demographics |
 | **Forms** | React Hook Form + Zod | Declarative validation with bilingual error messages |
@@ -1047,7 +1047,7 @@ backend/src/
 |---|---|---|---|
 | **Frontend** | React | 18.x | UI framework |
 | | TypeScript | 5.x | Type safety |
-| | Ant Design | 5.x | Component library (RTL support) |
+| | Stitch | Latest | UI Generation library (RTL support, Vanilla CSS) |
 | | React Router | 6.x | Client-side routing |
 | | React Query | 5.x | Server state management |
 | | Axios | 1.x | HTTP client |

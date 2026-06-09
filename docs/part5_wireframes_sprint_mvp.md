@@ -429,7 +429,7 @@
 |-----------|-------------------|---------------------|
 | **Dev 1 (BE Lead)** | Git repo + monorepo setup, Docker Compose (MySQL + API), NestJS scaffolding, database config | TypeORM entities + migrations for all 17 tables, seed data (roles, admin user) |
 | **Dev 2 (BE)** | Auth module: register, login, JWT strategy, RBAC guards | Auth module: change-password, refresh-token, profile endpoints |
-| **Dev 3 (FE Lead)** | Vite + React scaffolding, Ant Design setup, i18next config, routing skeleton | Auth pages (Login, Register), ProtectedRoute, AppLayout with sidebar |
+| **Dev 3 (FE Lead)** | Vite + React scaffolding, Stitch UI Generation setup, i18next config, routing skeleton | Auth pages (Login, Register), ProtectedRoute, AppLayout with sidebar |
 | **Dev 4 (FE)** | Design system: CSS variables, theme config, RTL stylesheet | Common components: DataTable, PageHeader, StatusBadge, ConfirmModal, LoadingSpinner |
 | **Dev 5 (FS)** | Help Dev 1 with Docker + DB setup, API response standardization | Swagger setup, error handling filter, validation pipe, common DTOs |
 
@@ -507,7 +507,7 @@
 | T08 | RBAC guards + roles decorator | Dev 2 | 1 | 5 | T07 | [ ] |
 | T09 | Auth: refresh-token + change-password | Dev 2 | 1 | 3 | T07 | [ ] |
 | T10 | Vite + React project scaffolding | Dev 3 | 1 | 2 | -- | [ ] |
-| T11 | Ant Design + i18next + routing setup | Dev 3 | 1 | 3 | T10 | [ ] |
+| T11 | Stitch UI Generation + i18next + routing setup | Dev 3 | 1 | 3 | T10 | [ ] |
 | T12 | Login + Register pages | Dev 3 | 1 | 5 | T11 | [ ] |
 | T13 | AppLayout (sidebar, header, footer) | Dev 3 | 1 | 5 | T11 | [ ] |
 | T14 | Design system: CSS vars + theme | Dev 4 | 1 | 3 | T10 | [ ] |
@@ -575,7 +575,7 @@ Key Dependencies:
 |---------|--------|------------|
 | DB migration fails | Blocks ALL backend | Dev 1 prioritizes + Dev 5 assists |
 | Auth not working | Blocks ALL protected routes | Dev 2 focuses exclusively on Day 1 |
-| Frontend scaffold issues | Blocks ALL UI work | Dev 3 pre-tests Vite + Ant Design setup |
+| Frontend scaffold issues | Blocks ALL UI work | Dev 3 pre-tests Vite + Stitch UI Generation setup |
 | API contract mismatch | Blocks FE-BE integration | Agree on Swagger specs Day 1 afternoon |
 
 ---

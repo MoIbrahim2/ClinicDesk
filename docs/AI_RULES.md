@@ -16,7 +16,7 @@
 - Frontend: React 18 with Vite
 - Routing: React Router v6
 - Server state: React Query
-- UI library: Ant Design 5
+- UI Generation: Stitch (generating custom React components with Vanilla CSS)
 - Forms: React Hook Form with Zod
 - i18n: i18next with Arabic RTL and English LTR support
 - Charts: Recharts

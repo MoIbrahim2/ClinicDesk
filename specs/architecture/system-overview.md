@@ -74,7 +74,7 @@ The frontend follows a feature-based React structure on top of shared applicatio
 Frontend technology and UX expectations:
 - React Router v6 for nested routing and protected routes.
 - React Query for server-state caching and synchronization.
-- Ant Design 5 for RTL-ready forms, tables, layouts, and navigation.
+- Stitch UI Generation for custom RTL-ready forms, tables, layouts, and navigation using Vanilla CSS.
 - `i18next` with JSON locale files for Arabic and English.
 - Recharts for dashboard analytics.
 - React Hook Form with Zod for validated forms.
