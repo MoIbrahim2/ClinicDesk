@@ -8,9 +8,12 @@ import { Visit } from '../visits/entities/visit.entity';
 import { Patient } from '../patients/entities/patient.entity';
 import { Doctor } from '../doctors/entities/doctor.entity';
 
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Prescription, PrescriptionItem, Visit, Patient, Doctor]),
+    AuditLogsModule,
   ],
   controllers: [PrescriptionsController],
   providers: [PrescriptionsService],

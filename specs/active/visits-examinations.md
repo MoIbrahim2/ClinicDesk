@@ -67,4 +67,4 @@ Visit records are the clinical core of the system. They improve continuity of ca
 
 ## Status
 
-In Progress (Backend Completed, Frontend Pending)
+Completed

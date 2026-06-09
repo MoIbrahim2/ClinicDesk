@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, ParseIntPipe, HttpCode, HttpStatus, Ip } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -10,13 +10,17 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { AppointmentStatus } from './entities/appointment.entity';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @ApiTags('appointments')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('appointments')
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  constructor(
+    private readonly appointmentsService: AppointmentsService,
+    private readonly auditLogsService: AuditLogsService,
+  ) {}
 
   @Post()
   @Roles('admin', 'receptionist', 'patient')
@@ -24,8 +28,14 @@ export class AppointmentsController {
   @ApiResponse({ status: 201, description: 'Appointment successfully scheduled' })
   @ApiResponse({ status: 400, description: 'Invalid input data or timeline' })
   @ApiResponse({ status: 409, description: 'Doctor availability mismatch or scheduling overlap conflict' })
-  create(@Body() createAppointmentDto: CreateAppointmentDto, @CurrentUser() user: User) {
-    return this.appointmentsService.create(createAppointmentDto, user);
+  async create(
+    @Body() createAppointmentDto: CreateAppointmentDto,
+    @CurrentUser() user: User,
+    @Ip() ip: string,
+  ) {
+    const appointment = await this.appointmentsService.create(createAppointmentDto, user);
+    await this.auditLogsService.logAction(user.id, 'CREATE', 'appointment', appointment.id, null, appointment, ip);
+    return appointment;
   }
 
   @Get()
@@ -88,12 +98,16 @@ export class AppointmentsController {
   @ApiResponse({ status: 200, description: 'Appointment updated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden access' })
   @ApiResponse({ status: 409, description: 'Scheduling conflict or availability mismatch' })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
     @CurrentUser() user: User,
+    @Ip() ip: string,
   ) {
-    return this.appointmentsService.update(id, updateAppointmentDto, user);
+    const oldAppt = await this.appointmentsService.findOne(id, user);
+    const updated = await this.appointmentsService.update(id, updateAppointmentDto, user);
+    await this.auditLogsService.logAction(user.id, 'UPDATE', 'appointment', id, oldAppt, updated, ip);
+    return updated;
   }
 
   @Patch(':id/status')
@@ -101,12 +115,16 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'Update appointment status (Patients can only cancel)' })
   @ApiResponse({ status: 200, description: 'Status updated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden transition or access' })
-  updateStatus(
+  async updateStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateStatusDto: UpdateAppointmentStatusDto,
     @CurrentUser() user: User,
+    @Ip() ip: string,
   ) {
-    return this.appointmentsService.updateStatus(id, updateStatusDto, user);
+    const oldAppt = await this.appointmentsService.findOne(id, user);
+    const updated = await this.appointmentsService.updateStatus(id, updateStatusDto, user);
+    await this.auditLogsService.logAction(user.id, 'UPDATE', 'appointment', id, oldAppt, updated, ip);
+    return updated;
   }
 
   @Delete(':id')
@@ -114,7 +132,13 @@ export class AppointmentsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete appointment (Admin/Receptionist only)' })
   @ApiResponse({ status: 204, description: 'Appointment deleted successfully' })
-  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
-    return this.appointmentsService.remove(id, user);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Ip() ip: string,
+  ) {
+    const oldAppt = await this.appointmentsService.findOne(id, user);
+    await this.appointmentsService.remove(id, user);
+    await this.auditLogsService.logAction(user.id, 'DELETE', 'appointment', id, oldAppt, null, ip);
   }
 }

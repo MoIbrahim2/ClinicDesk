@@ -6,6 +6,9 @@ import { AppointmentsController } from './appointments.controller';
 import { PatientsModule } from '../patients/patients.module';
 import { DoctorsModule } from '../doctors/doctors.module';
 import { UsersModule } from '../users/users.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 
 @Module({
   imports: [
@@ -13,6 +16,8 @@ import { UsersModule } from '../users/users.module';
     PatientsModule,
     DoctorsModule,
     UsersModule,
+    NotificationsModule,
+    AuditLogsModule,
   ],
   controllers: [AppointmentsController],
   providers: [AppointmentsService],

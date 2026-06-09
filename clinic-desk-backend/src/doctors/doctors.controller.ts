@@ -27,7 +27,7 @@ export class DoctorsController {
   }
 
   @Get()
-  @Roles('admin', 'doctor', 'receptionist')
+  @Roles('admin', 'doctor', 'receptionist', 'patient')
   @ApiOperation({ summary: 'Get all doctors with pagination, search, and filters' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })

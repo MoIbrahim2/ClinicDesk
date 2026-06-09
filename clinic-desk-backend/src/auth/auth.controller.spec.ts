@@ -2,10 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UnauthorizedException } from '@nestjs/common';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
   let authService: jest.Mocked<AuthService>;
+  let auditLogsService: jest.Mocked<AuditLogsService>;
 
   beforeEach(async () => {
     const mockAuthService = {
@@ -15,13 +17,23 @@ describe('AuthController', () => {
       refresh: jest.fn(),
     };
 
+    const mockAuditLogsService = {
+      logAction: jest.fn().mockResolvedValue(null),
+      findAll: jest.fn(),
+      getFilters: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthService, useValue: mockAuthService }],
+      providers: [
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: AuditLogsService, useValue: mockAuditLogsService },
+      ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
     authService = module.get(AuthService);
+    auditLogsService = module.get(AuditLogsService);
   });
 
   it('should be defined', () => {
@@ -41,11 +53,20 @@ describe('AuthController', () => {
         cookie: jest.fn(),
       } as any;
 
-      const result = await controller.login(loginDto, mockResponse);
+      const result = await controller.login(loginDto, mockResponse, '127.0.0.1');
 
       expect(authService.validateUser).toHaveBeenCalledWith(loginDto);
       expect(authService.login).toHaveBeenCalledWith(user);
       expect(mockResponse.cookie).toHaveBeenCalledWith('refreshToken', 'refresh', expect.any(Object));
+      expect(auditLogsService.logAction).toHaveBeenCalledWith(
+        user.id,
+        'LOGIN',
+        'user',
+        user.id,
+        null,
+        null,
+        '127.0.0.1',
+      );
       expect(result).toEqual({ accessToken: 'access', user });
     });
   });

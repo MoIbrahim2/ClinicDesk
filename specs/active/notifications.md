@@ -64,4 +64,4 @@ Notifications improve responsiveness and reduce operational friction without req
 
 ## Status
 
-Draft
+Implemented

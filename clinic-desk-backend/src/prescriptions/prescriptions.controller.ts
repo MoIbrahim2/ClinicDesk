@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, ParseIntPipe, Ip } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { PrescriptionsService } from './prescriptions.service';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto';
@@ -8,13 +8,17 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @ApiTags('prescriptions')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('prescriptions')
 export class PrescriptionsController {
-  constructor(private readonly prescriptionsService: PrescriptionsService) {}
+  constructor(
+    private readonly prescriptionsService: PrescriptionsService,
+    private readonly auditLogsService: AuditLogsService,
+  ) {}
 
   @Post()
   @Roles('admin', 'doctor')
@@ -22,8 +26,14 @@ export class PrescriptionsController {
   @ApiResponse({ status: 201, description: 'Prescription successfully created' })
   @ApiResponse({ status: 400, description: 'Visit is not draft or invalid inputs' })
   @ApiResponse({ status: 403, description: 'Forbidden access' })
-  create(@Body() createPrescriptionDto: CreatePrescriptionDto, @CurrentUser() user: User) {
-    return this.prescriptionsService.create(createPrescriptionDto, user);
+  async create(
+    @Body() createPrescriptionDto: CreatePrescriptionDto,
+    @CurrentUser() user: User,
+    @Ip() ip: string,
+  ) {
+    const prescription = await this.prescriptionsService.create(createPrescriptionDto, user);
+    await this.auditLogsService.logAction(user.id, 'CREATE', 'prescription', prescription.id, null, prescription, ip);
+    return prescription;
   }
 
   @Get()
@@ -63,12 +73,16 @@ export class PrescriptionsController {
   @ApiResponse({ status: 400, description: 'Associated visit is not draft, or invalid inputs' })
   @ApiResponse({ status: 403, description: 'Forbidden access' })
   @ApiResponse({ status: 404, description: 'Prescription not found' })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePrescriptionDto: UpdatePrescriptionDto,
     @CurrentUser() user: User,
+    @Ip() ip: string,
   ) {
-    return this.prescriptionsService.update(id, updatePrescriptionDto, user);
+    const oldPresc = await this.prescriptionsService.findOne(id, user);
+    const updated = await this.prescriptionsService.update(id, updatePrescriptionDto, user);
+    await this.auditLogsService.logAction(user.id, 'UPDATE', 'prescription', id, oldPresc, updated, ip);
+    return updated;
   }
 
   @Delete(':id')
@@ -78,8 +92,14 @@ export class PrescriptionsController {
   @ApiResponse({ status: 400, description: 'Associated visit is not draft' })
   @ApiResponse({ status: 403, description: 'Forbidden access' })
   @ApiResponse({ status: 404, description: 'Prescription not found' })
-  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
-    return this.prescriptionsService.remove(id, user);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Ip() ip: string,
+  ) {
+    const oldPresc = await this.prescriptionsService.findOne(id, user);
+    await this.prescriptionsService.remove(id, user);
+    await this.auditLogsService.logAction(user.id, 'DELETE', 'prescription', id, oldPresc, null, ip);
   }
 
   @Post(':id/duplicate')
@@ -89,11 +109,14 @@ export class PrescriptionsController {
   @ApiResponse({ status: 400, description: 'Invalid target visit or mismatching patient' })
   @ApiResponse({ status: 403, description: 'Forbidden access' })
   @ApiResponse({ status: 404, description: 'Prescription or target visit not found' })
-  duplicate(
+  async duplicate(
     @Param('id', ParseIntPipe) id: number,
     @Body('visitId', ParseIntPipe) targetVisitId: number,
     @CurrentUser() user: User,
+    @Ip() ip: string,
   ) {
-    return this.prescriptionsService.duplicate(id, targetVisitId, user);
+    const duplicated = await this.prescriptionsService.duplicate(id, targetVisitId, user);
+    await this.auditLogsService.logAction(user.id, 'CREATE', 'prescription', duplicated.id, null, duplicated, ip);
+    return duplicated;
   }
 }

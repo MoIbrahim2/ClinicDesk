@@ -10,7 +10,7 @@ const PatientDetails = ({ patientId, onBack }) => {
 
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('visits'); // visits, appointments, prescriptions, billing
+  const [activeTab, setActiveTab] = useState('timeline'); // timeline, visits, appointments, prescriptions, billing
 
   // Aggregated details state
   const [visits, setVisits] = useState([]);
@@ -64,6 +64,90 @@ const PatientDetails = ({ patientId, onBack }) => {
     const last = isAr && doc.lastNameAr ? doc.lastNameAr : doc.lastName;
     return `${currentLang === 'ar' ? 'د. ' : 'Dr. '}${first} ${last}`;
   };
+
+  const getTimelineEvents = () => {
+    const events = [];
+
+    // 1. Add visits
+    visits.forEach((v) => {
+      events.push({
+        id: `visit-${v.id}`,
+        type: 'visit',
+        date: new Date(v.createdAt),
+        title: currentLang === 'ar' ? 'زيارة سريرية' : 'Clinical Visit',
+        description: `${currentLang === 'ar' ? 'زيارة مع' : 'Visit with'} ${getDoctorDisplayName(v.doctor)}`,
+        details: v.chiefComplaint ? `"${v.chiefComplaint}"` : '',
+        status: v.status,
+        raw: v,
+      });
+    });
+
+    // 2. Add appointments
+    appointments.forEach((a) => {
+      const [year, month, day] = a.date.split('-').map(Number);
+      const [hours, minutes] = a.startTime.split(':').map(Number);
+      const apptDate = new Date(year, month - 1, day, hours, minutes);
+
+      events.push({
+        id: `appt-${a.id}`,
+        type: 'appointment',
+        date: apptDate,
+        title: currentLang === 'ar' ? 'موعد' : 'Appointment',
+        description: `${currentLang === 'ar' ? 'موعد مع' : 'Appointment with'} ${getDoctorDisplayName(a.doctor)}`,
+        details: a.reason ? `${currentLang === 'ar' ? 'السبب:' : 'Reason:'} ${a.reason}` : '',
+        status: a.status,
+        raw: a,
+      });
+    });
+
+    // 3. Add prescriptions
+    prescriptions.forEach((rx) => {
+      events.push({
+        id: `rx-${rx.id}`,
+        type: 'prescription',
+        date: new Date(rx.createdAt),
+        title: currentLang === 'ar' ? 'وصفة طبية' : 'Prescription',
+        description: `${currentLang === 'ar' ? 'صادرة عن' : 'Issued by'} ${getDoctorDisplayName(rx.doctor)}`,
+        details: rx.items?.map((item) => item.medicationName).join(', ') || '',
+        status: 'active',
+        raw: rx,
+      });
+    });
+
+    // 4. Add invoices & payments
+    invoices.forEach((inv) => {
+      events.push({
+        id: `inv-${inv.id}`,
+        type: 'invoice',
+        date: new Date(inv.createdAt),
+        title: currentLang === 'ar' ? 'فاتورة مالية' : 'Financial Invoice',
+        description: `${currentLang === 'ar' ? 'فاتورة رقم' : 'Invoice'} #${inv.invoiceNumber}`,
+        details: `${currentLang === 'ar' ? 'الإجمالي:' : 'Total:'} $${Number(inv.total).toFixed(2)} • ${currentLang === 'ar' ? 'المستحق:' : 'Due:'} $${Number(inv.balanceDue).toFixed(2)}`,
+        status: inv.status,
+        raw: inv,
+      });
+
+      if (inv.payments && inv.payments.length > 0) {
+        inv.payments.forEach((pay) => {
+          events.push({
+            id: `pay-${pay.id}`,
+            type: 'payment',
+            date: new Date(pay.createdAt),
+            title: currentLang === 'ar' ? 'دفعة مالية' : 'Payment Received',
+            description: `${currentLang === 'ar' ? 'دفعة للفاتورة رقم' : 'Payment for Invoice'} #${inv.invoiceNumber}`,
+            details: `${currentLang === 'ar' ? 'المبلغ:' : 'Amount:'} $${Number(pay.amount).toFixed(2)} (${currentLang === 'ar' ? pay.method : pay.method})`,
+            status: 'completed',
+            raw: pay,
+          });
+        });
+      }
+    });
+
+    // Sort events DESC by date
+    return events.sort((a, b) => b.date.getTime() - a.date.getTime());
+  };
+
+  const timelineEvents = getTimelineEvents();
 
   if (loading) {
     return (
@@ -204,6 +288,16 @@ const PatientDetails = ({ patientId, onBack }) => {
           {/* Tab Navigation */}
           <div className="card" style={{ padding: '8px', display: 'flex', gap: '8px', overflowX: 'auto' }}>
             <button
+              onClick={() => setActiveTab('timeline')}
+              className={`btn ${activeTab === 'timeline' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+              style={{ flexGrow: 1 }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px', verticalAlign: 'middle', marginInlineEnd: '6px' }}>
+                timeline
+              </span>
+              {t('patients.details.timeline')}
+            </button>
+            <button
               onClick={() => setActiveTab('visits')}
               className={`btn ${activeTab === 'visits' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
               style={{ flexGrow: 1 }}
@@ -247,6 +341,123 @@ const PatientDetails = ({ patientId, onBack }) => {
 
           {/* Tab Content Panels */}
           <div className="card" style={{ padding: '24px', minHeight: '350px' }}>
+            {/* TIMELINE TAB */}
+            {activeTab === 'timeline' && (
+              <div className="flex flex-col gap-md">
+                <h3 style={{ fontSize: '16px', fontWeight: 700 }}>{t('patients.details.timeline')}</h3>
+                {timelineEvents.length === 0 ? (
+                  <div className="text-center text-muted p-xl">{t('patients.details.no_records')}</div>
+                ) : (
+                  <div className="timeline-wrapper" style={{ position: 'relative', paddingLeft: currentLang === 'ar' ? '0' : '20px', paddingRight: currentLang === 'ar' ? '20px' : '0', marginTop: '10px' }}>
+                    {/* Vertical line indicator */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '12px',
+                      bottom: '12px',
+                      left: currentLang === 'ar' ? 'auto' : '8px',
+                      right: currentLang === 'ar' ? '8px' : 'auto',
+                      width: '2px',
+                      backgroundColor: 'var(--outline-variant)'
+                    }} />
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                      {timelineEvents.map((evt) => {
+                        const iconMap = {
+                          visit: 'rate_review',
+                          appointment: 'calendar_month',
+                          prescription: 'prescriptions',
+                          invoice: 'receipt_long',
+                          payment: 'payments'
+                        };
+                        const colorMap = {
+                          visit: 'var(--primary)',
+                          appointment: 'var(--secondary)',
+                          prescription: '#0ea5e9',
+                          invoice: 'var(--error)',
+                          payment: 'var(--success)'
+                        };
+                        const bgMap = {
+                          visit: 'var(--primary-container)',
+                          appointment: 'var(--secondary-container)',
+                          prescription: '#e0f2fe',
+                          invoice: 'var(--error-container)',
+                          payment: '#d1fae5'
+                        };
+
+                        return (
+                          <div key={evt.id} style={{ display: 'flex', gap: '16px', position: 'relative', alignItems: 'start' }}>
+                            {/* Dot icon */}
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '50%',
+                              backgroundColor: bgMap[evt.type] || 'var(--surface-container)',
+                              color: colorMap[evt.type] || 'var(--on-surface)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              zIndex: 2,
+                              marginInlineStart: '-28px'
+                            }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                                {iconMap[evt.type] || 'info'}
+                              </span>
+                            </div>
+
+                            {/* Event Card Content */}
+                            <div className="card" style={{ flexGrow: 1, padding: '12px 16px', backgroundColor: 'var(--surface-container-low)', boxShadow: 'var(--shadow-sm)', margin: 0 }}>
+                              <div className="flex justify-between items-center flex-wrap gap-xs" style={{ marginBottom: '6px' }}>
+                                <span className="font-bold text-xs" style={{ color: colorMap[evt.type], textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                  {evt.title}
+                                </span>
+                                <span className="text-muted" style={{ fontSize: '11px' }}>
+                                  {evt.date.toLocaleString(currentLang)}
+                                </span>
+                              </div>
+                              <p className="font-semibold text-sm" style={{ margin: '0 0 4px 0', color: 'var(--on-surface)' }}>
+                                {evt.description}
+                              </p>
+                              {evt.details && (
+                                <p className="text-xs text-muted" style={{ margin: 0, fontStyle: evt.type === 'visit' ? 'italic' : 'normal' }}>
+                                  {evt.details}
+                                </p>
+                              )}
+                              
+                              {/* Inline status badges */}
+                              {evt.type === 'appointment' && (
+                                <span className={`badge ${
+                                  evt.status === 'completed' ? 'badge-success' :
+                                  evt.status === 'confirmed' ? 'badge-info' :
+                                  evt.status === 'cancelled' ? 'badge-error' : 'badge-warning'
+                                }`} style={{ marginTop: '8px', fontSize: '10px', display: 'inline-block' }}>
+                                  {evt.status}
+                                </span>
+                              )}
+                              {evt.type === 'invoice' && (
+                                <span className={`badge ${
+                                  evt.status === 'paid' ? 'badge-success' :
+                                  evt.status === 'partially_paid' ? 'badge-warning' : 'badge-error'
+                                }`} style={{ marginTop: '8px', fontSize: '10px', display: 'inline-block' }}>
+                                  {evt.status}
+                                </span>
+                              )}
+                              {evt.type === 'visit' && (
+                                <span className={`badge ${
+                                  evt.status === 'finalized' ? 'badge-success' : 'badge-warning'
+                                }`} style={{ marginTop: '8px', fontSize: '10px', display: 'inline-block' }}>
+                                  {evt.status}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* VISITS TAB */}
             {activeTab === 'visits' && (
               <div className="flex flex-col gap-md">

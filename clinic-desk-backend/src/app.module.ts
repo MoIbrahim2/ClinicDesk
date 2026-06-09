@@ -17,6 +17,10 @@ import { VisitsModule } from './visits/visits.module';
 import { PrescriptionsModule } from './prescriptions/prescriptions.module';
 import { ServicesModule } from './services/services.module';
 import { InvoicesModule } from './invoices/invoices.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ClinicSettingsModule } from './clinic-settings/clinic-settings.module';
+import { AuditLogsModule } from './audit-logs/audit-logs.module';
 
 @Module({
   imports: [
@@ -40,6 +44,10 @@ import { InvoicesModule } from './invoices/invoices.module';
     PrescriptionsModule,
     ServicesModule,
     InvoicesModule,
+    DashboardModule,
+    NotificationsModule,
+    ClinicSettingsModule,
+    AuditLogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

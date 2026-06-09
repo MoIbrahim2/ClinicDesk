@@ -9,6 +9,7 @@ import { Patient } from '../patients/entities/patient.entity';
 import { Doctor } from '../doctors/entities/doctor.entity';
 import { NotFoundException, BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { User } from '../users/entities/user.entity';
+import { InvoicesService } from '../invoices/invoices.service';
 
 describe('VisitsService', () => {
   let service: VisitsService;
@@ -51,6 +52,9 @@ describe('VisitsService', () => {
     const mockDoctorRepo = {
       findOne: jest.fn(),
     };
+    const mockInvoicesService = {
+      createFromVisit: jest.fn().mockResolvedValue(null),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -60,6 +64,7 @@ describe('VisitsService', () => {
         { provide: getRepositoryToken(Appointment), useValue: mockAppointmentRepo },
         { provide: getRepositoryToken(Patient), useValue: mockPatientRepo },
         { provide: getRepositoryToken(Doctor), useValue: mockDoctorRepo },
+        { provide: InvoicesService, useValue: mockInvoicesService },
       ],
     }).compile();
 

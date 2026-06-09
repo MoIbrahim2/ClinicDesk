@@ -8,6 +8,7 @@ import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { UpdateAppointmentStatusDto } from './dto/update-appointment-status.dto';
 import { User } from '../users/entities/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AppointmentsService {
@@ -18,6 +19,7 @@ export class AppointmentsService {
     private readonly patientRepository: Repository<Patient>,
     @InjectRepository(Doctor)
     private readonly doctorRepository: Repository<Doctor>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(createAppointmentDto: CreateAppointmentDto, currentUser: User): Promise<Appointment> {
@@ -92,7 +94,28 @@ export class AppointmentsService {
       ...rest,
     });
 
-    return this.appointmentRepository.save(appointment);
+    const savedAppointment = await this.appointmentRepository.save(appointment);
+
+    if (currentUser.role.name === 'patient') {
+      const patientName = `${patient.firstName} ${patient.lastName}`;
+      const patientNameAr = patient.firstNameAr && patient.lastNameAr ? `${patient.firstNameAr} ${patient.lastNameAr}` : patientName;
+      const doctorName = `${doctor.firstName} ${doctor.lastName}`;
+      const doctorNameAr = doctor.firstNameAr && doctor.lastNameAr ? `${doctor.firstNameAr} ${doctor.lastNameAr}` : doctorName;
+      
+      const timeStr = startTime.substring(0, 5);
+
+      this.notificationsService.notifyReceptionists(
+        'New Appointment Booked',
+        'تم حجز موعد جديد',
+        `Patient ${patientName} booked a new appointment with Dr. ${doctorName} on ${date} at ${timeStr}.`,
+        `قام المريض ${patientNameAr} بحجز موعد جديد مع د. ${doctorNameAr} في ${date} الساعة ${timeStr}.`,
+        '/appointments',
+        'appointment',
+        savedAppointment.id
+      ).catch(err => console.error('Failed to send receptionist notification', err));
+    }
+
+    return savedAppointment;
   }
 
   async findAll(
@@ -333,7 +356,29 @@ export class AppointmentsService {
       appointment.rescheduleReason = reason;
     }
 
-    return this.appointmentRepository.save(appointment);
+    const saved = await this.appointmentRepository.save(appointment);
+
+    if (status === AppointmentStatus.CHECKED_IN && appointment.doctor?.userId) {
+      const patientName = `${appointment.patient.firstName} ${appointment.patient.lastName}`;
+      const patientNameAr = appointment.patient.firstNameAr && appointment.patient.lastNameAr 
+        ? `${appointment.patient.firstNameAr} ${appointment.patient.lastNameAr}` 
+        : patientName;
+      const timeStr = appointment.startTime.substring(0, 5);
+
+      this.notificationsService.createNotification({
+        userId: appointment.doctor.userId,
+        title: 'Patient Checked In',
+        titleAr: 'تم تسجيل دخول المريض',
+        message: `Patient ${patientName} has checked in for the appointment at ${timeStr}.`,
+        messageAr: `تم تسجيل دخول المريض ${patientNameAr} لموعده الساعة ${timeStr}.`,
+        type: 'check_in',
+        link: '/visits',
+        entityType: 'appointment',
+        entityId: appointment.id,
+      }).catch(err => console.error('Failed to send check-in notification', err));
+    }
+
+    return saved;
   }
 
   async remove(id: number, currentUser: User): Promise<void> {

@@ -9,10 +9,13 @@ import { Patient } from '../patients/entities/patient.entity';
 import { Doctor } from '../doctors/entities/doctor.entity';
 import { InvoicesModule } from '../invoices/invoices.module';
 
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Visit, Diagnosis, Appointment, Patient, Doctor]),
     InvoicesModule,
+    AuditLogsModule,
   ],
   controllers: [VisitsController],
   providers: [VisitsService],

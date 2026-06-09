@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards, Query, ParseIntPipe, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, Query, ParseIntPipe, HttpCode, Ip } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { VisitsService } from './visits.service';
 import { CreateVisitDto } from './dto/create-visit.dto';
@@ -9,13 +9,17 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { VisitStatus } from './entities/visit.entity';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @ApiTags('visits')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('visits')
 export class VisitsController {
-  constructor(private readonly visitsService: VisitsService) {}
+  constructor(
+    private readonly visitsService: VisitsService,
+    private readonly auditLogsService: AuditLogsService,
+  ) {}
 
   @Post()
   @Roles('admin', 'doctor')
@@ -24,8 +28,14 @@ export class VisitsController {
   @ApiResponse({ status: 400, description: 'Appointment not checked in or invalid input' })
   @ApiResponse({ status: 403, description: 'Forbidden access' })
   @ApiResponse({ status: 409, description: 'Visit already exists for this appointment' })
-  create(@Body() createVisitDto: CreateVisitDto, @CurrentUser() user: User) {
-    return this.visitsService.create(createVisitDto, user);
+  async create(
+    @Body() createVisitDto: CreateVisitDto,
+    @CurrentUser() user: User,
+    @Ip() ip: string,
+  ) {
+    const visit = await this.visitsService.create(createVisitDto, user);
+    await this.auditLogsService.logAction(user.id, 'CREATE', 'visit', visit.id, null, visit, ip);
+    return visit;
   }
 
   @Patch(':id')
@@ -34,12 +44,16 @@ export class VisitsController {
   @ApiResponse({ status: 200, description: 'Draft saved successfully' })
   @ApiResponse({ status: 400, description: 'Cannot modify finalized visit or not same-day' })
   @ApiResponse({ status: 403, description: 'Forbidden access' })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateVisitDto: UpdateVisitDto,
     @CurrentUser() user: User,
+    @Ip() ip: string,
   ) {
-    return this.visitsService.updateDraft(id, updateVisitDto, user);
+    const oldVisit = await this.visitsService.findOne(id, user);
+    const updated = await this.visitsService.updateDraft(id, updateVisitDto, user);
+    await this.auditLogsService.logAction(user.id, 'UPDATE', 'visit', id, oldVisit, updated, ip);
+    return updated;
   }
 
   @Post(':id/finalize')
@@ -49,8 +63,15 @@ export class VisitsController {
   @ApiResponse({ status: 200, description: 'Visit finalized successfully' })
   @ApiResponse({ status: 400, description: 'Validation fails (e.g. no primary diagnosis)' })
   @ApiResponse({ status: 403, description: 'Forbidden access' })
-  finalize(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
-    return this.visitsService.finalize(id, user);
+  async finalize(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Ip() ip: string,
+  ) {
+    const oldVisit = await this.visitsService.findOne(id, user);
+    const updated = await this.visitsService.finalize(id, user);
+    await this.auditLogsService.logAction(user.id, 'FINALIZE', 'visit', id, oldVisit, updated, ip);
+    return updated;
   }
 
   @Get()

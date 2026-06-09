@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Req, Get, UseGuards, UnauthorizedException, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, Get, UseGuards, UnauthorizedException, HttpCode, HttpStatus, Ip } from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -7,11 +7,15 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly auditLogsService: AuditLogsService,
+  ) {}
 
   private setRefreshTokenCookie(res: Response, token: string) {
     res.cookie('refreshToken', token, {
@@ -46,10 +50,15 @@ export class AuthController {
   @ApiOperation({ summary: 'Log in with email and password' })
   @ApiResponse({ status: 200, description: 'Successfully logged in' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+    @Ip() ip: string,
+  ) {
     const user = await this.authService.validateUser(loginDto);
     const result = await this.authService.login(user);
     this.setRefreshTokenCookie(res, result.refreshToken);
+    await this.auditLogsService.logAction(user.id, 'LOGIN', 'user', user.id, null, null, ip);
     return {
       accessToken: result.accessToken,
       user: result.user,
@@ -84,11 +93,18 @@ export class AuthController {
   }
 
   @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Log out user and clear session cookie' })
   @ApiResponse({ status: 200, description: 'Successfully logged out' })
-  async logout(@Res({ passthrough: true }) res: Response) {
+  async logout(
+    @Res({ passthrough: true }) res: Response,
+    @CurrentUser() user: User,
+    @Ip() ip: string,
+  ) {
     this.clearRefreshTokenCookie(res);
+    await this.auditLogsService.logAction(user.id, 'LOGOUT', 'user', user.id, null, null, ip);
     return { message: 'Logged out successfully' };
   }
 

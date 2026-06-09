@@ -7,6 +7,7 @@ import { Patient } from '../patients/entities/patient.entity';
 import { Doctor } from '../doctors/entities/doctor.entity';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { User } from '../users/entities/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('AppointmentsService', () => {
   let service: AppointmentsService;
@@ -34,6 +35,10 @@ describe('AppointmentsService', () => {
     const mockDoctorRepo = {
       findOne: jest.fn(),
     };
+    const mockNotificationsService = {
+      notifyReceptionists: jest.fn().mockResolvedValue(null),
+      createNotification: jest.fn().mockResolvedValue(null),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -41,6 +46,7 @@ describe('AppointmentsService', () => {
         { provide: getRepositoryToken(Appointment), useValue: mockAppointmentRepo },
         { provide: getRepositoryToken(Patient), useValue: mockPatientRepo },
         { provide: getRepositoryToken(Doctor), useValue: mockDoctorRepo },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 

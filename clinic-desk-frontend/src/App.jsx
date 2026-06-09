@@ -9,12 +9,12 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
 import Doctors from './pages/Doctors';
-import {
-  AppointmentsPlaceholder,
-  VisitsPlaceholder,
-  PrescriptionsPlaceholder,
-  BillingPlaceholder,
-} from './pages/Placeholders';
+import Appointments from './pages/Appointments';
+import Visits from './pages/Visits';
+import Prescriptions from './pages/Prescriptions';
+import Reports from './pages/Reports';
+import Billing from './pages/Billing';
+import AdminSettings from './pages/AdminSettings';
 
 // Initialize translations
 import './i18n';
@@ -35,10 +35,12 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/patients" element={<Patients />} />
                 <Route path="/doctors" element={<Doctors />} />
-                <Route path="/appointments" element={<AppointmentsPlaceholder />} />
-                <Route path="/visits" element={<VisitsPlaceholder />} />
-                <Route path="/prescriptions" element={<PrescriptionsPlaceholder />} />
-                <Route path="/billing" element={<BillingPlaceholder />} />
+                <Route path="/appointments" element={<Appointments />} />
+                <Route path="/visits" element={<Visits />} />
+                <Route path="/prescriptions" element={<Prescriptions />} />
+                <Route path="/billing" element={<Billing />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/admin-settings" element={<AdminSettings />} />
               </Route>
             </Route>
 

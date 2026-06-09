@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, ParseIntPipe, HttpCode, HttpStatus, Ip } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { InvoicesService } from './invoices.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -10,13 +10,17 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { InvoiceStatus } from './entities/invoice.entity';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @ApiTags('invoices')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) {}
+  constructor(
+    private readonly invoicesService: InvoicesService,
+    private readonly auditLogsService: AuditLogsService,
+  ) {}
 
   @Get('summary')
   @Roles('admin')
@@ -31,8 +35,14 @@ export class InvoicesController {
   @ApiOperation({ summary: 'Create a manual/standalone invoice' })
   @ApiResponse({ status: 201, description: 'Invoice successfully created' })
   @ApiResponse({ status: 400, description: 'Invalid fields' })
-  create(@Body() createInvoiceDto: CreateInvoiceDto, @CurrentUser() user: User) {
-    return this.invoicesService.create(createInvoiceDto, user);
+  async create(
+    @Body() createInvoiceDto: CreateInvoiceDto,
+    @CurrentUser() user: User,
+    @Ip() ip: string,
+  ) {
+    const invoice = await this.invoicesService.create(createInvoiceDto, user);
+    await this.auditLogsService.logAction(user.id, 'CREATE', 'invoice', invoice.id, null, invoice, ip);
+    return invoice;
   }
 
   @Get()
@@ -69,12 +79,16 @@ export class InvoicesController {
   @ApiResponse({ status: 200, description: 'Invoice successfully updated' })
   @ApiResponse({ status: 400, description: 'Invoice is paid/voided or total is negative' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateInvoiceDto: UpdateInvoiceDto,
     @CurrentUser() user: User,
+    @Ip() ip: string,
   ) {
-    return this.invoicesService.update(id, updateInvoiceDto, user);
+    const oldInv = await this.invoicesService.findOne(id, user);
+    const updated = await this.invoicesService.update(id, updateInvoiceDto, user);
+    await this.auditLogsService.logAction(user.id, 'UPDATE', 'invoice', id, oldInv, updated, ip);
+    return updated;
   }
 
   @Post(':id/void')
@@ -84,8 +98,15 @@ export class InvoicesController {
   @ApiResponse({ status: 200, description: 'Invoice successfully voided' })
   @ApiResponse({ status: 400, description: 'Invoice has payments or is already voided' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
-  voidInvoice(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
-    return this.invoicesService.voidInvoice(id, user);
+  async voidInvoice(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+    @Ip() ip: string,
+  ) {
+    const oldInv = await this.invoicesService.findOne(id, user);
+    const updated = await this.invoicesService.voidInvoice(id, user);
+    await this.auditLogsService.logAction(user.id, 'UPDATE', 'invoice', id, oldInv, updated, ip);
+    return updated;
   }
 
   @Post(':id/payments')
@@ -94,11 +115,14 @@ export class InvoicesController {
   @ApiResponse({ status: 201, description: 'Payment recorded and invoice updated' })
   @ApiResponse({ status: 400, description: 'Amount exceeds balance due or invalid fields' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
-  recordPayment(
+  async recordPayment(
     @Param('id', ParseIntPipe) id: number,
     @Body() createPaymentDto: CreatePaymentDto,
     @CurrentUser() user: User,
+    @Ip() ip: string,
   ) {
-    return this.invoicesService.recordPayment(id, createPaymentDto, user);
+    const result = await this.invoicesService.recordPayment(id, createPaymentDto, user);
+    await this.auditLogsService.logAction(user.id, 'CREATE', 'payment', result.id, null, result, ip);
+    return result;
   }
 }
