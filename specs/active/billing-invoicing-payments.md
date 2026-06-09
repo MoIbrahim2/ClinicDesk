@@ -72,4 +72,4 @@ Billing closes the loop between operations and revenue. It improves financial tr
 
 ## Status
 
-Backend Implementation Completed (Invoices, Invoice Items, Payments, Services catalog tables, payment recording, auto-generation from visits, and test suite verified; Frontend implementation pending)
+Completed

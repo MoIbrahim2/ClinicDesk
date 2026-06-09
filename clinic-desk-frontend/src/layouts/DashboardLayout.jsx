@@ -9,7 +9,7 @@ const DashboardLayout = () => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -215,6 +215,11 @@ const DashboardLayout = () => {
                 key={item.path}
                 to={item.path}
                 className={`sidebar-link ${isActive ? 'active' : ''}`}
+                onClick={() => {
+                  if (window.innerWidth <= 768) {
+                    setSidebarOpen(false);
+                  }
+                }}
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
                 <span style={{ fontSize: '0.9rem' }}>{item.label}</span>

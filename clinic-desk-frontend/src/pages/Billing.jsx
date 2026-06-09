@@ -482,11 +482,11 @@ const Billing = () => {
 
       {/* Modal 1: Printable Receipt Modal */}
       {viewingInvoice && (
-        <div className="modal-backdrop flex items-center justify-center no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 1000, padding: '16px', overflowY: 'auto' }}>
+        <div className="modal-backdrop flex items-center justify-center" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 1000, padding: '16px', overflowY: 'auto' }}>
           <div className="card modal-content w-full flex flex-col gap-md" style={{ maxWidth: '800px', padding: '24px', boxShadow: 'var(--elevation-3)' }}>
             
             {/* Header Controls */}
-            <div className="flex justify-between items-center pb-md" style={{ borderBottom: '1px solid var(--outline-variant)' }}>
+            <div className="flex justify-between items-center pb-md no-print" style={{ borderBottom: '1px solid var(--outline-variant)' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 700 }}>{t('billing.invoice_details')}</h2>
               <div className="flex gap-sm">
                 <button
@@ -526,6 +526,16 @@ const Billing = () => {
                   @media print {
                     body * {
                       visibility: hidden !important;
+                    }
+                    .modal-backdrop, .modal-content {
+                      visibility: visible !important;
+                      position: static !important;
+                      background: transparent !important;
+                      padding: 0 !important;
+                      margin: 0 !important;
+                      box-shadow: none !important;
+                      max-width: 100% !important;
+                      overflow: visible !important;
                     }
                     .printable-receipt, .printable-receipt * {
                       visibility: visible !important;

@@ -38,6 +38,10 @@
 - Implemented frontend Billing, Invoicing, and Payment module, displaying paginated invoice logs with status filters, client-side aggregate metrics summary panels, printable bilingual clinic-branded receipt modals, payment registers, and standalone manual invoice builders.
 - Implemented frontend and backend Notification Center, including user notification retrieval, mark-read, mark-all-read, and delete endpoints, check-in hooks for doctor alerts, self-service patient booking triggers for receptionists, a background scheduler for automated patient reminders, and a styled bilingual header notification bell dropdown.
 - Implemented Clinic Administration module, featuring role-based staff user management CRUD endpoints, singleton clinic settings metadata (VAT %, currency, name, default operational hours) with auto-seeding on startup, and a centralized multi-tab settings portal in Arabic and English.
+- Implemented audit-log tracking, viewing, and filtering for administrators (backend subscriber, entities, service, controller, and settings tab UI viewer with Arabic RTL/English LTR translations).
+- Hardened validation, global error handling, and security header controls across backend APIs and Nginx.
+- Completed unit and integration test suites for billing, invoices, prescriptions, availability, conflict checks, and Role-Based Access Control (enforcing 18 passing test suites and 95 tests).
+- Finished responsive sidebar menu collapsing/overlaying layout, added scrollable tables, set accessibility focus indicators, and resolved a critical bug in bilingual print preview rendering for prescriptions and invoices.
 
 ## In Progress
 
@@ -45,8 +49,7 @@
 
 ## Next
 
-- Implement audit-log tracking, viewing, and filtering for administrators (backend subscriber, entities, and UI viewer).
-- Add hardening for validation, error handling, security controls, and key tests for RBAC, conflict detection, and billing calculations.
+- None. (All Sprint backlog and MVP features are completed and verified.)
 
 ## Blockers
 

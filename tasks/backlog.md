@@ -31,10 +31,10 @@ Goal: complete business operations, governance features, and demo-ready polish a
 - [x] Implement billing, invoicing, invoice generation from visits, and payment recording. (Completed)
 - [x] Implement receipt and invoice print/export flows. (Completed)
 - [x] Implement clinic administration for services, staff oversight, and clinic settings.
-- [ ] Implement audit-log viewing and filtering for administrators.
+- [x] Implement audit-log viewing and filtering for administrators.
 - [x] Complete revenue reports and reporting filters by date, doctor, and payment method. (Completed)
-- [ ] Add hardening for validation, error handling, security controls, and key tests for RBAC, conflict detection, and billing calculations.
-- [ ] Finish responsive polish, accessibility checks, and bilingual print verification.
+- [x] Add hardening for validation, error handling, security controls, and key tests for RBAC, conflict detection, and billing calculations.
+- [/] Finish responsive polish, accessibility checks, and bilingual print verification.
 
 MVP-first priority order across sprints:
 - Authentication and authorization

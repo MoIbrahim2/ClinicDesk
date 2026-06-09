@@ -5,7 +5,7 @@ import { AppointmentsService } from './appointments.service';
 import { Appointment } from './entities/appointment.entity';
 import { Patient } from '../patients/entities/patient.entity';
 import { Doctor } from '../doctors/entities/doctor.entity';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -82,6 +82,64 @@ describe('AppointmentsService', () => {
       await expect(
         service.create({ patientId: 1, doctorId: 1, date: '2026-06-15', startTime: '10:00', endTime: '09:00' }, mockAdminUser)
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw ForbiddenException if patient attempts to book for another patient', async () => {
+      const patientUser = { id: 2, role: { name: 'patient' } } as User;
+      patientRepo.findOne.mockResolvedValueOnce({ id: 10, userId: 2 } as any); // patient's own profile id is 10
+
+      await expect(
+        service.create({ patientId: 11, doctorId: 1, date: '2026-06-15', startTime: '09:00', endTime: '09:30' }, patientUser)
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ConflictException if doctor is not working on the requested day', async () => {
+      patientRepo.findOne.mockResolvedValue({ id: 1 } as any);
+      // Doctor works only on Mondays (dayOfWeek: 1). 2026-06-14 is Sunday (dayOfWeek: 0)
+      const doctor = {
+        id: 1,
+        workingHours: [{ dayOfWeek: 1, slots: [{ start: '09:00', end: '17:00' }] }],
+      } as Doctor;
+      doctorRepo.findOne.mockResolvedValue(doctor);
+
+      await expect(
+        service.create({ patientId: 1, doctorId: 1, date: '2026-06-14', startTime: '09:00', endTime: '09:30' }, mockAdminUser)
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw ConflictException if time slot is outside doctor working hours', async () => {
+      patientRepo.findOne.mockResolvedValue({ id: 1 } as any);
+      // 2026-06-15 is Monday (dayOfWeek: 1)
+      const doctor = {
+        id: 1,
+        workingHours: [{ dayOfWeek: 1, slots: [{ start: '09:00', end: '12:00' }] }],
+      } as Doctor;
+      doctorRepo.findOne.mockResolvedValue(doctor);
+
+      await expect(
+        service.create({ patientId: 1, doctorId: 1, date: '2026-06-15', startTime: '12:00', endTime: '13:00' }, mockAdminUser)
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw ConflictException if doctor is double booked', async () => {
+      patientRepo.findOne.mockResolvedValue({ id: 1 } as any);
+      const doctor = {
+        id: 1,
+        workingHours: [{ dayOfWeek: 1, slots: [{ start: '09:00', end: '17:00' }] }],
+      } as Doctor;
+      doctorRepo.findOne.mockResolvedValue(doctor);
+
+      // Mock query builder to return conflict
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue({ id: 999, startTime: '09:00', endTime: '09:30' }),
+      };
+      appointmentRepo.createQueryBuilder.mockReturnValue(mockQueryBuilder as any);
+
+      await expect(
+        service.create({ patientId: 1, doctorId: 1, date: '2026-06-15', startTime: '09:15', endTime: '09:45' }, mockAdminUser)
+      ).rejects.toThrow(ConflictException);
     });
   });
 });
